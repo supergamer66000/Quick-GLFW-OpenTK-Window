@@ -2,16 +2,17 @@
 using OpenTK.Graphics.OpenGL;
 using System.Diagnostics;
 using OpenTK;
+using System.Drawing;
 
 namespace Program
 {
-    internal class Game
+    internal class Game : IDisposable
     {
         public unsafe Window* _window;
 
-        public int width { get; set; }
-        public int height { get; set; }
-        public string title;
+        public int Width { get; set; }
+        public int Height { get; set; }
+        public string Title;
 
         // Loop Vars
         public double deltaTime;
@@ -23,10 +24,16 @@ namespace Program
 
         public Game(int width, int height, string title)
         {
-            this.width = width; this.height = height; this.title = title;
+            this.Width = width; this.Height = height; this.Title = title;
 
             InitializeGLFW();
             InitializeGL();
+
+            var error = GL.GetError();
+            if (error != 0)
+            {
+                throw new Exception("Error with OpenGL" + error);
+            }
         }
 
         private void InitializeGLFW()
@@ -43,7 +50,7 @@ namespace Program
 
             unsafe
             {
-                _window = GLFW.CreateWindow(this.width, this.height, this.title, null, null);
+                _window = GLFW.CreateWindow(this.Width, this.Height, this.Title, null, null);
                 if (_window == null)
                 {
                     throw new Exception("Failed to create GLFW window");
@@ -56,8 +63,6 @@ namespace Program
 
                 // Load OpenGL function bindings
                 GL.LoadBindings(new GLFWBindingsContext());
-
-                //GL.Viewport(0, 0, this.width, this.height);
             }
         }
 
@@ -142,6 +147,9 @@ namespace Program
 
         private void Render()
         {
+            GL.Clear(ClearBufferMask.ColorBufferBit);
+            GL.ClearColor(Color.AliceBlue);
+
             // Rendering Code goes here
         }
     }
