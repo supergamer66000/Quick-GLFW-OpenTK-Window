@@ -1,7 +1,6 @@
 ﻿using OpenTK.Windowing.GraphicsLibraryFramework;
 using OpenTK.Graphics.OpenGL;
 using System.Diagnostics;
-using OpenTK;
 using System.Drawing;
 
 namespace Program
@@ -15,8 +14,8 @@ namespace Program
         public string Title;
 
         // Loop Vars
-        public double deltaTime;
-        public double fps;
+        public double _deltaTime;
+        public double _fps;
         private Stopwatch _stopwatch;
         private double _lastTime;
         private double _accumulator;
@@ -62,7 +61,7 @@ namespace Program
                 GLFW.MakeContextCurrent(_window);
 
                 // Load OpenGL function bindings
-                GL.LoadBindings(new GLFWBindingsContext());
+                GL.LoadBindings(new GLFWBindingsContext()); // Load binding for OpenGL
             }
         }
 
@@ -70,7 +69,7 @@ namespace Program
         {
             try
             {
-                StartGameLoop();
+                RunGameLoop();
             }
             catch (Exception ex)
             {
@@ -92,47 +91,52 @@ namespace Program
             GC.SuppressFinalize(this);
         }
 
-        private void StartGameLoop()
+        private void RunGameLoop()
         {
             _stopwatch = Stopwatch.StartNew();
             _lastTime = _stopwatch.Elapsed.TotalSeconds;
 
-            // FPS stuff
-            double fpsTimeElapsed = 0;
+            double fpsElapsedTime = 0;
             int frameCount = 0;
 
             bool isRunning = true;
-            while (isRunning)
+            try
             {
-                unsafe { isRunning = !GLFW.WindowShouldClose(_window); }
-                double currentTime = _stopwatch.Elapsed.TotalSeconds;
-                deltaTime = currentTime - _lastTime;
-                _lastTime = currentTime;
-
-                /// FPS Logic ///
-                //frameCount++;                     // Increment frame count
-                //fpsTimeElapsed += deltaTime;      // Accumulate elapsed time
-                //if (fpsTimeElapsed >= 1)
-                //{
-                //    fps = frameCount / fpsTimeElapsed;
-                //    Console.WriteLine($"FPS: {fps}");
-                //    frameCount = 0;
-                //    fpsTimeElapsed = 0.0;
-                //}
-                ///
-
-                _accumulator += deltaTime;
-                while (_accumulator >= Timestep)
+                while (isRunning)
                 {
-                    Update(deltaTime);
-                    _accumulator -= Timestep;
-                }
+                    unsafe { isRunning = !GLFW.WindowShouldClose(_window); }
 
-                Render();
-                unsafe { GLFW.SwapBuffers(_window); }
-                GLFW.PollEvents();
+                    double currentTime = _stopwatch.Elapsed.TotalSeconds;
+                    _deltaTime = currentTime - _lastTime;
+                    _lastTime = currentTime;
+
+                    // Calculate FPS
+                    frameCount++;
+                    fpsElapsedTime += _deltaTime;
+                    if (fpsElapsedTime >= 1.0)
+                    {
+                        _fps = frameCount / fpsElapsedTime;
+                        Console.WriteLine($"FPS: {_fps}");
+                        frameCount = 0;
+                        fpsElapsedTime = 0.0;
+                    }
+
+                    // Update and render as fast as possible
+                    Update(_deltaTime);
+                    Render();
+
+                    // Swap buffers and poll events
+                    unsafe { GLFW.SwapBuffers(_window); }
+                    GLFW.PollEvents();
+
+                    // Optional: Yield CPU if too fast (comment out if not needed)
+                    Thread.Sleep(0); // Gives time to other threads, reduces CPU load slightly
+                }
             }
-            Dispose();
+            finally
+            {
+                Dispose(); // Deletes all unnessary stuff after the program Exits
+            }
         }
 
         private void Update(double deltaTime)
@@ -147,6 +151,8 @@ namespace Program
 
         private void Render()
         {
+            unsafe { if ( _window == null) return; } // Additional Error Checking
+
             GL.Clear(ClearBufferMask.ColorBufferBit);
             GL.ClearColor(Color.AliceBlue);
 
