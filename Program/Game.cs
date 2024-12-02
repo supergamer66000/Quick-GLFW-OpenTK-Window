@@ -2,12 +2,14 @@
 using OpenTK.Graphics.OpenGL;
 using System.Diagnostics;
 using System.Drawing;
+using System.Runtime.InteropServices;
 
 namespace Program
 {
     internal class Game : IDisposable
     {
         public unsafe Window* _window;
+        public bool _showConsole = true;
 
         public int Width { get; set; }
         public int Height { get; set; }
@@ -24,6 +26,17 @@ namespace Program
         public Game(int width, int height, string title)
         {
             this.Width = width; this.Height = height; this.Title = title;
+
+            // Console Logic
+            if (_showConsole == true)
+            {
+                // Creates a Console
+                [DllImport("kernel32.dll", SetLastError = true)]
+                [return: MarshalAs(UnmanagedType.Bool)]
+                static extern bool AllocConsole();
+
+                AllocConsole();
+            }
 
             InitializeGLFW();
             InitializeGL();

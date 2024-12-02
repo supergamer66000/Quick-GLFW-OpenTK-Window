@@ -7,15 +7,14 @@ namespace Program
     {
         static void Main(string[] args)
         {
-            // Creates a Console
-            [DllImport("kernel32.dll", SetLastError = true)]
-            [return: MarshalAs(UnmanagedType.Bool)]
-            static extern bool AllocConsole();
-
-            AllocConsole();
-
-            Game game = new Game(854, 480, "Title");
-            game.Start();
+            try
+            {
+                Game game = new Game(854, 480, "Title");
+                game.Start();
+            } catch (Exception ex)
+            {
+                Console.WriteLine("ERROR STARTING GAME" + ex.ToString());
+            }
         }
     }
 }
